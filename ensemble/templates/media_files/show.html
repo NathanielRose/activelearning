@@ -1,0 +1,21 @@
+{% extends "base.html" %}<!---->
+{% block title %}{{ file.name }}{% endblock %}<!---->
+{% block content %}
+{% load static %}
+<script src="{% static "ensemble/foxmovieensemble/build/static/js/main.js" %}"></script>
+<script>
+  console.log(ensemble)
+  try {
+    const iMedia = {{ data|safe }}
+    console.log(iMedia)
+
+    // Create element to mount visualization component to
+    const mount = document.createElement('div')
+    document.body.appendChild(mount);
+    ensemble.mountVisualization(mount, iMedia)
+  } catch (err) {
+    console.error(err)
+    alert(err)
+  }
+</script>
+{% endblock %}
