@@ -24,7 +24,9 @@ class Command(BaseCommand):
         audioset_model = Model(name="audioset")
         audioset_model.save()
         audioset_model.classifications.add(gunshot)
-        audioset_model_trained = ModelVersion(model=audioset_model, loss=0.01)
+        audioset_model_trained = ModelVersion(
+            model=audioset_model, version="0.01alpha2"
+        )
         audioset_model_trained.save()
 
         for movie in json.loads(self.__movie_json, strict=False):
@@ -65,7 +67,7 @@ class Command(BaseCommand):
             media_file=media_file,
             classification=classification,
             confidence=randint(0, 100),
-            model=model,
+            model_version=model,
             time=randint(0, 600000),
             x=x,
             y=y,
@@ -81,7 +83,7 @@ class Command(BaseCommand):
             media_file=media_file,
             classification=classification,
             confidence=randint(0, 100),
-            model=model,
+            model_version=model,
             time=randint(0, 600000),
             duration="10000",
         )

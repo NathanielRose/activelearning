@@ -7,11 +7,19 @@ class MediaFile(models.Model):
     """A media file which can be labelled or made predictions against"""
 
     name = models.CharField(unique=True, max_length=255)
-    url = models.CharField(unique=True, max_length=255)
-    description = models.TextField()
+    url = models.CharField(unique=True, max_length=255, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return self.name
+
+
+class Subtitle(models.Model):
+    """Optional subtitles for a MediaFile"""
+
+    name = models.CharField(unique=True, max_length=255, null=False)
+    url = models.CharField(unique=True, max_length=255, null=False)
+    media_file = models.ForeignKey(MediaFile, on_delete=models.CASCADE)
 
 
 class Classification(models.Model):
@@ -28,6 +36,25 @@ class Classification(models.Model):
 ################################################################################
 
 
+def generate_timecode(ms: int) -> str:
+    """
+    Convert a duration in seconds to ISO8601 hh:mm:ss.sss format
+    """
+    hours = math.floor(ms / (60 * 60 * 1000))
+    minutes = math.floor(ms / (60 * 1000)) % 60
+    seconds = math.floor(ms / 1000) % 60
+    milliseconds = ms % 1000
+    return (
+        str(hours).rjust(2, "0")
+        + ":"
+        + str(minutes).rjust(2, "0")
+        + ":"
+        + str(seconds).rjust(2, "0")
+        + "."
+        + str(milliseconds).rjust(3, "0")
+    )
+
+
 class Label(models.Model):
     """Abstract base class for a Label
     https://docs.djangoproject.com/en/2.1/topics/db/models/#abstract-base-classes
@@ -39,6 +66,7 @@ class Label(models.Model):
 
     media_file = models.ForeignKey(MediaFile, on_delete=models.CASCADE)
     classification = models.ForeignKey(Classification, on_delete=models.CASCADE)
+    file = models.CharField(max_length=255, null=True, blank=True)
 
 
 class AudioLabel(Label):
@@ -52,25 +80,10 @@ class AudioLabel(Label):
     )
     duration = models.IntegerField(validators=[MinValueValidator(0)])
 
-    def __str__(self):
-        def generate_timecode(ms: int) -> str:
-            """
-            Convert a duration in seconds to ISO8601 hh:mm:ss.sss format
-            """
-            hours = math.floor(ms / (60 * 60 * 1000))
-            minutes = math.floor(ms / (60 * 1000)) % 60
-            seconds = math.floor(ms / 1000) % 60
-            milliseconds = ms % 1000
-            return (
-                str(hours).rjust(2, "0")
-                + ":"
-                + str(minutes).rjust(2, "0")
-                + ":"
-                + str(seconds).rjust(2, "0")
-                + "."
-                + str(milliseconds).rjust(3, "0")
-            )
+    def timecode(self):
+        return generate_timecode(self.time)
 
+    def __str__(self):
         return (
             str(self.classification)
             + "_"
@@ -85,10 +98,10 @@ class ImageLabel(Label):
     A 3D bounding box for a single image
     """
 
-    x = models.IntegerField(validators=[MinValueValidator(0)])
-    y = models.IntegerField(validators=[MinValueValidator(0)])
-    width = models.IntegerField(validators=[MinValueValidator(0)])
-    height = models.IntegerField(validators=[MinValueValidator(0)])
+    x = models.FloatField(validators=[MinValueValidator(0)])
+    y = models.FloatField(validators=[MinValueValidator(0)])
+    width = models.FloatField(validators=[MinValueValidator(0)])
+    height = models.FloatField(validators=[MinValueValidator(0)])
 
     def __str__(self):
         return (
@@ -112,6 +125,9 @@ class VideoLabel(ImageLabel):
     time = models.IntegerField(
         validators=[MinValueValidator(0)], verbose_name="Time (milliseconds)"
     )
+
+    def timecode(self):
+        return generate_timecode(self.time)
 
     def __str__(self):
         return (
@@ -151,10 +167,11 @@ class ModelVersion(models.Model):
     """
 
     model = models.ForeignKey(Model, on_delete=models.CASCADE)
-    loss = models.FloatField()
+    version = models.CharField(unique=True, max_length=255)
+    description = models.TextField(null=True)
 
     def __str__(self):
-        return str(self.model) + "_" + str(self.loss)
+        return str(self.model) + "_" + str(self.version)
 
 
 ################################################################################
@@ -171,10 +188,10 @@ class Prediction(models.Model):
     class Meta:
         abstract = True
 
-    confidence = models.IntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    confidence = models.FloatField(
+        validators=[MinValueValidator(0), MaxValueValidator(1)]
     )
-    model = models.ForeignKey(ModelVersion, on_delete=models.CASCADE)
+    model_version = models.ForeignKey(ModelVersion, on_delete=models.CASCADE)
 
     def __str__(self):
         return super().__str__() + self.confidence

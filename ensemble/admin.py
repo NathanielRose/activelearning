@@ -10,6 +10,7 @@ from .models import (
     Model,
     ModelVersion,
     VideoPrediction,
+    Subtitle,
 )
 
 # Register your models here.
@@ -20,3 +21,4 @@ admin.site.register(MediaFile)
 admin.site.register(Model)
 admin.site.register(ModelVersion)
 admin.site.register(VideoPrediction)
+admin.site.register(Subtitle)
