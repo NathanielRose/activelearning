@@ -215,7 +215,22 @@ def files_compare(request, file_id: int):
         }
         predictions_data.append(inference_data)
 
-    return render(request, "media_files/compare.html", {})
+    return render(
+        request,
+        "media_files/compare.html",
+        {
+            "data": json.dumps(
+                {
+                    "groundTruth": {
+                        "title": file.name,
+                        "url": file.url,
+                        "timecodes": ground_truth_timecodes,
+                    },
+                    "predictions": predictions_data,
+                }
+            )
+        },
+    )
     # return JsonResponse(
     #     {
     #         "groundTruth": {

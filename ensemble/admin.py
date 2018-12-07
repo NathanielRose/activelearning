@@ -4,8 +4,9 @@ from .models import (
     AudioLabel,
     AudioPrediction,
     Classification,
-    ImageLabel,
     ImagePrediction,
+    VideoLabel,
+    AudioLabel,
     MediaFile,
     Model,
     ModelVersion,
@@ -16,9 +17,10 @@ from .models import (
 # Register your models here.
 admin.site.register(AudioPrediction)
 admin.site.register(Classification)
-admin.site.register(ImagePrediction)
 admin.site.register(MediaFile)
 admin.site.register(Model)
 admin.site.register(ModelVersion)
 admin.site.register(VideoPrediction)
 admin.site.register(Subtitle)
+admin.site.register(VideoLabel)
+admin.site.register(AudioLabel)

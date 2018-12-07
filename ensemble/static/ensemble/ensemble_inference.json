@@ -1,9 +1,9 @@
 {
   "title": "Deadpool2",
   "url": "",
-  "modelType": "",
-  "modelVersion": "",
-  "modelDescription": "",
+  "modelType": "Keras",
+  "modelVersion": "v123",
+  "modelDescription": "some random keras model",
   "class": "video",
   "timecodes": {
     "00:02:19.251": [],
