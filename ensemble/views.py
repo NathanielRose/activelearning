@@ -109,7 +109,7 @@ def files_show(request, file_id: int):
         ),
     }
     if file.url:
-        data["sourceUrl"]: file.url
+        data["sourceUrl"] = file.url
 
     return render(
         request,
