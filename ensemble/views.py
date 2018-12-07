@@ -27,7 +27,8 @@ def predictions(request, prediction_id: int):
 
 
 def files_index(request):
-    file_list = get_list_or_404(MediaFile)
+    # file_list = get_list_or_404(MediaFile)
+    file_list = MediaFile.objects.all()
     context = {"file_list": file_list}
     return render(request, "media_files/index.html", context)
 

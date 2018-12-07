@@ -167,7 +167,7 @@ class ModelVersion(models.Model):
     """
 
     model = models.ForeignKey(Model, on_delete=models.CASCADE)
-    version = models.CharField(unique=True, max_length=255)
+    version = models.CharField(max_length=255)
     description = models.TextField(null=True)
 
     def __str__(self):

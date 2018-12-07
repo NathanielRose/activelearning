@@ -85,7 +85,7 @@ class Command(BaseCommand):
                                     if box
                                     else 0,
                                 )
-                                print("Created VideoPrediction: " + str(video_p.id))
+                                print("Created VideoPrediction: " + str(video_p))
                             else:
                                 audio_p = AudioPrediction.objects.create(
                                     media_file=movie,
@@ -96,7 +96,7 @@ class Command(BaseCommand):
                                     time=timecode_to_ms(timecode),
                                     duration=10000,
                                 )
-                                print("Created AudioPrediction: " + str(audio_p.id))
+                                print("Created AudioPrediction: " + str(audio_p))
                 else:
                     # Ground-truth flow
                     for timecode, predictions in j["timecodes"].items():
@@ -121,7 +121,7 @@ class Command(BaseCommand):
                                     if box
                                     else 0,
                                 )
-                                print("Created VideoLabel: " + str(video_label.id))
+                                print("Created VideoLabel: " + str(video_label))
                             else:
                                 audio_label = AudioLabel.objects.create(
                                     media_file=movie,
@@ -130,4 +130,4 @@ class Command(BaseCommand):
                                     time=timecode_to_ms(timecode),
                                     duration=10000,
                                 )
-                                print("Created AudioLabel: " + str(audio_label.id))
+                                print("Created AudioLabel: " + str(audio_label))
