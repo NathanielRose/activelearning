@@ -24,7 +24,8 @@ admin.site.site_title = "Active Learning"
 admin.site.site_header = "Active Learning Management"
 
 urlpatterns = (
-    [path("ensemble/", include("ensemble.urls")), path("admin/", admin.site.urls)]
+    [path("", include("ensemble.urls"))]
+    + [path("ensemble/", include("ensemble.urls")), path("admin/", admin.site.urls)]
     + ensemble_urls
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 )

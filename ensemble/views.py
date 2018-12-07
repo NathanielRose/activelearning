@@ -37,14 +37,38 @@ def files_show(request, file_id: int):
     # image_labels = file.imagelabel_set.all()
     # imageprediction_set.all() will not work here because of the way the predictions sub-class labels
 
+    video_labels = VideoLabel.objects.filter(
+        media_file__id=file_id, videoprediction__isnull=True
+    )
+    audio_labels = AudioLabel.objects.filter(
+        media_file__id=file_id, audioprediction__isnull=True
+    )
     image_predictions = ImagePrediction.objects.filter(media_file__id=file_id)
     video_predictions = VideoPrediction.objects.filter(media_file__id=file_id)
     audio_predictions = AudioPrediction.objects.filter(media_file__id=file_id)
     subtitles = Subtitle.objects.filter(media_file__id=file_id)
     data = {
         "title": file.name,
-        "sourceUrl": file.url,
         "subtitles": [s for s in subtitles],
+        "labels": [
+            {
+                "classifier": l.classification.name,
+                "time": l.time,
+                "x": l.x,
+                "y": l.y,
+                "width": l.width,
+                "height": l.height,
+            }
+            for l in video_labels
+        ]
+        + [
+            {
+                "classifier": l.classification.name,
+                "time": l.time,
+                "duration": l.duration,
+            }
+            for l in audio_labels
+        ],
         "predictions": sorted(
             [
                 {
@@ -84,6 +108,8 @@ def files_show(request, file_id: int):
             key=lambda p: p["time"],
         ),
     }
+    if file.url:
+        data["sourceUrl"]: file.url
 
     return render(
         request,
