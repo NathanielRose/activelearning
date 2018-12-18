@@ -69,7 +69,7 @@ class Command(BaseCommand):
 
                             if is_video:
                                 box = p["box"]
-                                VideoPrediction.objects.create(
+                                video_p = VideoPrediction.objects.create(
                                     media_file=movie,
                                     file=p["file"] if p["file"] else None,
                                     classification=classification,
@@ -85,8 +85,9 @@ class Command(BaseCommand):
                                     if box
                                     else 0,
                                 )
+                                print("Created VideoPrediction: " + str(video_p))
                             else:
-                                AudioPrediction.objects.create(
+                                audio_p = AudioPrediction.objects.create(
                                     media_file=movie,
                                     file=p["file"] if p["file"] else None,
                                     classification=classification,
@@ -94,6 +95,9 @@ class Command(BaseCommand):
                                     model_version=model_version,
                                     time=timecode_to_ms(timecode),
                                     duration=10000,
+                                )
+                                print(
+                                    "Created AudioPrediction: " + str() + str(audio_p)
                                 )
                 else:
                     # Ground-truth flow
@@ -105,7 +109,7 @@ class Command(BaseCommand):
                             is_video = True if "box" in p else False
                             if is_video:
                                 box = p["box"]
-                                VideoLabel.objects.create(
+                                video_label = VideoLabel.objects.create(
                                     media_file=movie,
                                     file=p["file"] if p["file"] else None,
                                     classification=classification,
@@ -119,11 +123,13 @@ class Command(BaseCommand):
                                     if box
                                     else 0,
                                 )
+                                print("Created VideoLabel: " + str(video_label))
                             else:
-                                AudioLabel.objects.create(
+                                audio_label = AudioLabel.objects.create(
                                     media_file=movie,
                                     file=p["file"] if p["file"] else None,
                                     classification=classification,
                                     time=timecode_to_ms(timecode),
                                     duration=10000,
                                 )
+                                print("Created AudioLabel: " + str(audio_label))

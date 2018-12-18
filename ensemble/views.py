@@ -27,7 +27,8 @@ def predictions(request, prediction_id: int):
 
 
 def files_index(request):
-    file_list = get_list_or_404(MediaFile)
+    # file_list = get_list_or_404(MediaFile)
+    file_list = MediaFile.objects.all()
     context = {"file_list": file_list}
     return render(request, "media_files/index.html", context)
 
@@ -120,6 +121,7 @@ def files_show(request, file_id: int):
             "audio_predictions": audio_predictions,
             "video_predictions": video_predictions,
             "data": data,
+            "json_data": json.dumps(data),
         },
     )
 
@@ -215,13 +217,30 @@ def files_compare(request, file_id: int):
         }
         predictions_data.append(inference_data)
 
-    return JsonResponse(
+    return render(
+        request,
+        "media_files/compare.html",
         {
-            "groundTruth": {
-                "title": file.name,
-                "url": file.url,
-                "timecodes": ground_truth_timecodes,
-            },
-            "predictions": predictions_data,
-        }
+            "data": json.dumps(
+                {
+                    "groundTruth": {
+                        "title": file.name,
+                        "url": file.url,
+                        "timecodes": ground_truth_timecodes,
+                    },
+                    "predictions": predictions_data,
+                },
+                indent=2,
+            ).replace("\\", "\\\\")
+        },
     )
+    # return JsonResponse(
+    #     {
+    #         "groundTruth": {
+    #             "title": file.name,
+    #             "url": file.url,
+    #             "timecodes": ground_truth_timecodes,
+    #         },
+    #         "predictions": predictions_data,
+    #     }
+    # )
