@@ -2,8 +2,13 @@
 {% block title %}{{ file.name }}{% endblock %}<!---->
 {% block content %}
 <div style="display: flex; flex-direction: row; max-height: 100vh;">
-  <div id="table_div" style="flex: 1 1;"></div>
-  <div id="chart_div" style="flex: 2;"></div>
+  <div id="table_div" style="flex: 1 1;"><code>Loading table...</code></div>
+  <div style="flex: 2; display: flex; flex-direction: column;">
+    <div id="annotation-chart" style="flex: 2">
+      <code>Loading annotated chart...</code>
+    </div>
+    <div id="chart_div" style="flex: 1;"><code>Loading timeline...</code></div>
+  </div>
 </div>
 
 <script
@@ -12,7 +17,7 @@
 ></script>
 <script type="text/javascript">
   const data = JSON.parse(`{{ data|safe }}`);
-  const timeCodeToDate = timeCode => {
+  const timeCodeToDate = (timeCode, { plusMS = 0 } = {}) => {
     const [hours, minutes, secondsAndMilliseconds] = timeCode.split(":");
     const [seconds, milliseconds] = secondsAndMilliseconds.split(".");
     const date = new Date(
@@ -22,71 +27,17 @@
       Number.parseInt(hours),
       Number.parseInt(minutes),
       Number.parseInt(seconds),
-      Number.parseInt(milliseconds)
+      Number.parseInt(milliseconds) + plusMS
     );
     return date;
   };
-  google.charts.load("current", { packages: ["table", "timeline"] });
+  google.charts.load("current", {
+    packages: ["table", "timeline", "annotationchart"]
+  });
 
   // Set a callback to run when the Google Visualization API is loaded.
   google.charts.setOnLoadCallback(() => {
-    const container = document.querySelector("#chart_div");
-    const chart = new google.visualization.Timeline(container);
     const dataTable = new google.visualization.DataTable();
-    dataTable.addColumn({
-      type: "string",
-      id: "Classification",
-      label: "Classification"
-    });
-    dataTable.addColumn({ type: "string", id: "Model", label: "Model" });
-    dataTable.addColumn({ type: "date", id: "Start", label: "Start" });
-    dataTable.addColumn({ type: "date", id: "End", label: "End" });
-    const groundTruthData = Object.keys(data.groundTruth.timecodes)
-      .map(timecode => {
-        return data.groundTruth.timecodes[timecode].map(prediction => {
-          prediction["timecode"] = timecode;
-          return prediction;
-        });
-      })
-      .reduce((flattened, list) => flattened.concat(list))
-      .map(prediction => {
-        return {
-          label: prediction.tag,
-          model: "Foobar",
-          startDate: timeCodeToDate(prediction.timecode),
-          endDate: timeCodeToDate(prediction.timecode)
-        };
-      });
-    console.log(
-      groundTruthData.map(data => [
-        data.label,
-        data.model,
-        data.startDate,
-        data.endDate
-      ])
-    );
-    dataTable.addRows(
-      groundTruthData.map(data => [
-        data.label,
-        data.model,
-        data.startDate,
-        data.endDate
-      ])
-    );
-
-    const options = {
-      timeline: { showRowLabels: true },
-      avoidOverlappingGridLines: true
-    };
-
-    chart.draw(dataTable, options);
-  });
-
-  google.charts.setOnLoadCallback(() => {
-    const container = document.querySelector("#table_div");
-    const chart = new google.visualization.Table(container);
-    const dataTable = new google.visualization.DataTable();
-
     dataTable.addColumn("string", "Classification");
     dataTable.addColumn("string", "Model");
     dataTable.addColumn("date", "Start");
@@ -98,30 +49,99 @@
           return prediction;
         });
       })
-      .reduce((flattened, list) => flattened.concat(list))
-      .map(prediction => {
+      .reduce((flattened, list) => flattened.concat(list), [])
+      .map(({ tag, timecode, duration = 0 }) => {
         return {
-          label: prediction.tag,
-          model: "Foobar",
-          startDate: timeCodeToDate(prediction.timecode),
-          endDate: timeCodeToDate(prediction.timecode)
+          label: tag,
+          model: "Ground Truth",
+          startDate: timeCodeToDate(timecode),
+          endDate: timeCodeToDate(timecode, { plusMS: duration })
         };
       });
+
+    const predictionData = data.predictions
+      .map(
+        ({
+          modelClass,
+          modelDescription,
+          modelType,
+          modelVersion,
+          timecodes
+        }) => {
+          return Object.keys(timecodes)
+            .map(timecode => {
+              return timecodes[timecode].map(
+                ({ box, file, score, tag, duration = 0 }) => {
+                  return {
+                    label: tag,
+                    model: modelType,
+                    startDate: timeCodeToDate(timecode),
+                    endDate: timeCodeToDate(timecode, { plusMS: duration })
+                  };
+                }
+              );
+            })
+            .reduce((flattened, list) => flattened.concat(list), []);
+        }
+      )
+      .reduce((flattened, list) => flattened.concat(list), []);
+
     dataTable.addRows(
-      groundTruthData.map(data => [
-        data.label,
-        data.model,
-        data.startDate,
-        data.endDate
-      ])
+      groundTruthData
+        .concat(predictionData)
+        .map(data => [data.label, data.model, data.startDate, data.endDate])
     );
 
-    const options = {
+    const timeline = new google.visualization.Timeline(
+      document.querySelector("#chart_div")
+    ).draw(dataTable, {
+      timeline: { showRowLabels: true, groupByRowLabel: true },
+      avoidOverlappingGridLines: false
+    });
+
+    const table = new google.visualization.Table(
+      document.querySelector("#table_div")
+    ).draw(dataTable, {
       width: "100%",
       height: "100%"
-    };
+    });
 
-    chart.draw(dataTable, options);
+    const annotatedChartData = new google.visualization.DataTable();
+    annotatedChartData.addColumn("datetime", "Date");
+    annotatedChartData.addColumn("number", "Confidence");
+    annotatedChartData.addColumn("string", "Classifier");
+    annotatedChartData.addColumn("string", "Classifier Model");
+    annotatedChartData.addRows(
+      data.predictions
+        .map(
+          ({
+            modelClass,
+            modelDescription,
+            modelType,
+            modelVersion,
+            timecodes
+          }) => {
+            return Object.keys(timecodes)
+              .map(timecode => {
+                return timecodes[timecode].map(
+                  ({ box, file, score, tag, duration = 0 }) => {
+                    return [timeCodeToDate(timecode), score, tag, modelType];
+                  }
+                );
+              })
+              .reduce((flattened, list) => flattened.concat(list));
+          }
+        )
+        .reduce((flattened, list) => flattened.concat(list))
+    );
+
+    const annotatedChart = new google.visualization.AnnotationChart(
+      document.querySelector("#annotation-chart")
+    ).draw(annotatedChartData, {
+      displayAnnotations: true,
+      max: 1,
+      min: 0
+    });
   });
 </script>
 {% endblock %}

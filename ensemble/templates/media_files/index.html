@@ -1,4 +1,6 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
+{% block title %}Media List{% endblock %}
+{% block content %}
 <h1>Media Files</h1>
 {% if file_list %}
 <div class="file-list">
@@ -13,8 +15,11 @@
     <div>
       <h3 style="margin-top: 0;">
         <a href="{% url 'files-show' file.id %}">{{ file.name }}</a>
+        <span style="font-size: small;">
+          <a href="{% url 'files-compare' file.id %}">[Analyze]</a>
+        </span>
       </h3>
-      <a href="{% url 'files-compare' file.id %}">Analyze predictions {{ file.name }}</a>
+
       <div style="flex: 1 0;">
         {% if file.description %}{{ file.description }}{% endif %}
       </div>

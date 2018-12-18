@@ -121,6 +121,7 @@ def files_show(request, file_id: int):
             "audio_predictions": audio_predictions,
             "video_predictions": video_predictions,
             "data": data,
+            "json_data": json.dumps(data),
         },
     )
 
@@ -228,8 +229,9 @@ def files_compare(request, file_id: int):
                         "timecodes": ground_truth_timecodes,
                     },
                     "predictions": predictions_data,
-                }
-            )
+                },
+                indent=2,
+            ).replace("\\", "\\\\")
         },
     )
     # return JsonResponse(

@@ -1,21 +1,24 @@
 {% extends "base.html" %}<!---->
 {% block title %}{{ file.name }}{% endblock %}<!---->
-{% block content %}
-{% load static %}
-<script src="{% static "ensemble/foxmovieensemble/build/static/js/main.js" %}"></script>
+{% block content %} {% load static %}
+
+<script src='{% static "ensemble/foxmovieensemble/build/static/js/main.js" %}'></script>
+
 <script>
-  console.log(ensemble)
+  console.log(ensemble);
   try {
-    const iMedia = {{ data|safe }}
-    console.log(iMedia)
+    // Parse json_data string into object
+    const data = JSON.parse(`{{ json_data|safe }}`);
+    console.log(data);
 
     // Create element to mount visualization component to
-    const mount = document.createElement('div')
+    const mount = document.createElement("div");
     document.body.appendChild(mount);
-    ensemble.mountVisualization(mount, iMedia)
+    ensemble.mountVisualization(mount, data);
   } catch (err) {
-    console.error(err)
-    alert(err)
+    console.error(err);
+    alert(err);
   }
 </script>
+
 {% endblock %}

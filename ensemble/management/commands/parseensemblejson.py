@@ -96,7 +96,9 @@ class Command(BaseCommand):
                                     time=timecode_to_ms(timecode),
                                     duration=10000,
                                 )
-                                print("Created AudioPrediction: " + str(audio_p))
+                                print(
+                                    "Created AudioPrediction: " + str() + str(audio_p)
+                                )
                 else:
                     # Ground-truth flow
                     for timecode, predictions in j["timecodes"].items():
